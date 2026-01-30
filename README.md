@@ -79,6 +79,19 @@ To sweep across different pruning ratios automatically:
 bash scripts/multi_run/run_multi_rrqr.sh 128 path/to/model path/to/output_base
 ```
 
+## 🪄 Finetuning
+
+After pruning, you can finetune the compressed model using LoRA to recover performance.
+
+### Running LoRA Finetuning
+```bash
+# Basic usage
+bash scripts/finetuning/run_lora.sh <COMPRESSED_CHECKPOINT> <OUTPUT_DIR>
+
+# For automated teacher determination (legacy mode)
+MODEL_NAME=delta_net PARAMS=340m RANK=64 METHOD=rrqr bash scripts/finetuning/run_lora.sh
+```
+
 ## 📊 Evaluation & Benchmarking
 
 ### Benchmarking Throughput
