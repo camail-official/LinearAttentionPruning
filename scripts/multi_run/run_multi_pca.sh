@@ -10,11 +10,12 @@ REPO_ROOT="$( cd "$SCRIPT_DIR/../.." && pwd )"
 RANKS=(64)
 
 # Base model path and output base provided by arguments
-BASE_MODEL_DIR=${1:-""}
-BASE_OUTPUT_DIR=${2:-""}
+BASE_MODEL_DIR=${BASE_MODEL_DIR:-$1}
+BASE_OUTPUT_DIR=${BASE_OUTPUT_DIR:-$2}
 
 if [ -z "$BASE_MODEL_DIR" ] || [ -z "$BASE_OUTPUT_DIR" ]; then
     echo "Usage: bash $0 <BASE_MODEL_DIR> <BASE_OUTPUT_DIR>"
+    echo "Or: BASE_MODEL_DIR=/path/to/model BASE_OUTPUT_DIR=/path/to/output bash $0"
     exit 1
 fi
 

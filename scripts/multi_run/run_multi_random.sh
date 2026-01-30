@@ -13,11 +13,12 @@ RATIOS=(0.1 0.2 0.3 0.4 0.5 0.75)
 ORIGINAL_DIM=${1:-128}
 
 # Base model path and output base provided by arguments
-BASE_MODEL_DIR=${2:-""}
-BASE_OUTPUT_DIR=${3:-""}
+BASE_MODEL_DIR=${BASE_MODEL_DIR:-$2}
+BASE_OUTPUT_DIR=${BASE_OUTPUT_DIR:-$3}
 
 if [ -z "$BASE_MODEL_DIR" ] || [ -z "$BASE_OUTPUT_DIR" ]; then
     echo "Usage: bash $0 <ORIGINAL_DIM> <BASE_MODEL_DIR> <BASE_OUTPUT_DIR>"
+    echo "Or: BASE_MODEL_DIR=/path/to/model BASE_OUTPUT_DIR=/path/to/output bash $0"
     exit 1
 fi
 

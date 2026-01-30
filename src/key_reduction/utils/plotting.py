@@ -21,12 +21,14 @@ from matplotlib.gridspec import GridSpec
 import numpy as np
 import torch
 
-# Add flash-linear-attention to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "flash-linear-attention"))
+# Resolve repository root (plotting.py is in src/key_reduction/utils/)
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
 
-# Add flame to path
-flame_path = os.path.join(os.path.dirname(__file__), "exp/flame")
-sys.path.insert(0, flame_path)
+# Add project directories to sys.path
+sys.path.insert(0, project_root)
+sys.path.insert(0, os.path.join(project_root, "src"))
+sys.path.insert(0, os.path.join(project_root, "flash-linear-attention"))
+sys.path.insert(0, os.path.join(project_root, "flame"))
 
 # Import fla to register DeltaNet and other models with transformers
 import fla  # noqa

@@ -11,11 +11,12 @@ export PYTHONPATH="$REPO_ROOT/src:$REPO_ROOT/flame:$REPO_ROOT/flash-linear-atten
 set -e  # Exit on error
 
 # Configuration
+COMPRESSED_MODEL=${COMPRESSED_MODEL:-$1}
 INITIAL_MODEL=${INITIAL_MODEL:-"fla-hub/delta_net-1.3B-100B"}
-COMPRESSED_MODEL=${COMPRESSED_MODEL:-""}
 
 if [ -z "$COMPRESSED_MODEL" ]; then
-    echo "Usage: COMPRESSED_MODEL=/path/to/compressed bash $0"
+    echo "Usage: bash $0 <COMPRESSED_MODEL> [INITIAL_MODEL]"
+    echo "Or: COMPRESSED_MODEL=/path/to/compressed bash $0"
     exit 1
 fi
 

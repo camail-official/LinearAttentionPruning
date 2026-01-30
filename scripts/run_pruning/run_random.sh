@@ -15,8 +15,12 @@ PRUNING_RATIO=${PRUNING_RATIO:-0.5}
 PRUNING_STRATEGY=${PRUNING_STRATEGY:-"dimension"}
 
 # Configuration
+BASE_MODEL_DIR=${BASE_MODEL_DIR:-$1}
+OUTPUT_DIR=${OUTPUT_DIR:-$2}
+
 if [ -z "$BASE_MODEL_DIR" ] || [ -z "$OUTPUT_DIR" ]; then
-    echo "Usage: BASE_MODEL_DIR=/path/to/model OUTPUT_DIR=/path/to/output bash $0"
+    echo "Usage: bash $0 <BASE_MODEL_DIR> <OUTPUT_DIR>"
+    echo "Or: BASE_MODEL_DIR=/path/to/model OUTPUT_DIR=/path/to/output bash $0"
     exit 1
 fi
 

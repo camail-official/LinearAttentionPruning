@@ -36,10 +36,11 @@ esac
 
 TOKENIZER_PATH="fla-hub/transformer-1.3B-100B"
 OUTPUT_BASE_DIR=${OUTPUT_BASE_DIR:-"$REPO_ROOT/eval_results/eval_${MODEL_NAME_SHORT}_${PARAMS}"}
-COMPRESSED_BASE=${COMPRESSED_BASE:-""}
+COMPRESSED_BASE=${COMPRESSED_BASE:-$4}
 
 if [ -z "$COMPRESSED_BASE" ]; then
-    echo "Usage: COMPRESSED_BASE=/path/to/checkpoints bash $0 <MODEL_NAME> <PARAMS> <METHOD>"
+    echo "Usage: bash $0 <MODEL_NAME> <PARAMS> <METHOD> <COMPRESSED_BASE>"
+    echo "Or: COMPRESSED_BASE=/path/to/checkpoints bash $0 ..."
     exit 1
 fi
 

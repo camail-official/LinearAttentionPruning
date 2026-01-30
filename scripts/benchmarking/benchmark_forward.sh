@@ -11,11 +11,12 @@ export PYTHONPATH="$REPO_ROOT/src:$REPO_ROOT/flame:$REPO_ROOT/flash-linear-atten
 set -e  # Exit on error
 
 # Configuration
-INITIAL_MODEL=${INITIAL_MODEL:-""}
-COMPRESSED_MODEL=${COMPRESSED_MODEL:-""}
+INITIAL_MODEL=${INITIAL_MODEL:-$1}
+COMPRESSED_MODEL=${COMPRESSED_MODEL:-$2}
 
 if [ -z "$INITIAL_MODEL" ] || [ -z "$COMPRESSED_MODEL" ]; then
-    echo "Usage: INITIAL_MODEL=/path/to/initial COMPRESSED_MODEL=/path/to/compressed bash $0"
+    echo "Usage: bash $0 <INITIAL_MODEL> <COMPRESSED_MODEL>"
+    echo "Or: INITIAL_MODEL=/path/to/initial COMPRESSED_MODEL=/path/to/compressed bash $0"
     exit 1
 fi
 
