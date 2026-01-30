@@ -1,105 +1,88 @@
-# DeltaNet Compression & Pruning
+# KeyReduction: Structural Pruning for DeltaNet
 
-This repository provides a comprehensive suite of tools for compressing and pruning **DeltaNet** and **GatedDeltaNet** models. It focuses on structural pruning (reducing head dimensions and member counts) and low-rank compression to improve inference efficiency and reduce memory footprint while maintaining performance.
+This repository provides an end-to-end pipeline for training, compressing, and evaluating **DeltaNet** and **GatedDeltaNet** models. We focus on structural Q/K dimension reduction to improve efficiency while maintaining performance.
 
+## 🚀 Quick Start
 
-# Setup
+### 1. Training a Model
+To train a model from scratch or continue training, use the `train.sh` script within the `flame` submodule.
 
-```\bash
-uv init --python 3.10
-```
-
-## 🚀 Features
-
-- **Multiple Pruning Methods**:
-  - **Strong RRQR (Rank-Revealing QR)**: Data-driven structural pruning using the Strong RRQR algorithm for optimal subspace selection.
-  - **Wanda**: Pruning based on the Weights and Activations score.
-  - **Taylor (LLM-Pruner)**: Gradient-based importance scoring for structural pruning.
-  - **PCA**: Principal Component Analysis for low-rank key/query dimension reduction.
-  - **L1 / Magnitude**: Data-free pruning based on weight or activation norms.
-  - **Random**: Baseline random pruning.
-- **Architectural Support**: Optimized for DeltaNet, DeltaNet2, and GatedDeltaNet with specific handling for `ShortConvolution` and shared kernels.
-- **End-to-End Pipeline**: Scripts for pruning, DCP (DeepSpeed Checkpoint) conversion, and evaluation.
-- **Flexible Strategies**: Support for pruning key dimensions (`head_k_dim`), value dimensions (`head_v_dim`), or entire heads.
-
-## 📁 Repository Structure
-
-```text
-KeyReduction/
-├── src/key_reduction/    # Core package logic
-│   ├── pruners/          # Pruning algorithm implementations
-│   └── utils/            # Shared utilities (plotting, etc.)
-├── scripts/              # Execution scripts
-│   ├── run_pruning/      # Individual pruning pipeline scripts
-│   ├── multi_run/        # Scripts for automated multi-ratio runs
-│   ├── benchmarking/     # Speed and memory benchmarking scripts
-│   └── eval/             # Evaluation and table generation scripts
-├── flame/                # Training and evaluation framework (submodule)
-├── flash-linear-attention/ # Optimized kernels (submodule)
-└── pyproject.toml        # Project configuration
-```
-
-## 🛠️ Installation
-
-### 1. Setup Submodules
-This repository depends on `flash-linear-attention` and `flame`.
 ```bash
-git submodule update --init --recursive
+# Example: Training a 340M GatedDeltaNet
+NNODE=1 NGPU=8 LOG_RANK=0 bash flame/train.sh \
+  --job.config_file flame/models/fla.toml \
+  --job.dump_folder exp/gated-deltanet-340M \
+  --model.config configs/gated_delta_net_340M.json \
+  --model.tokenizer_path fla-hub/transformer-1.3B-100B \
+  --training.steps 20000 \
+  --training.dataset HuggingFaceFW/fineweb-edu \
+  --training.dataset_name sample-10BT
 ```
 
-### 2. Install Dependencies
+### 2. Pruning a Model
+We provide several structural pruning methods. You can prune either a local checkpoint or a model directly from the Hugging Face Hub.
+
+#### Example: Strong RRQR (drrqr)
+This method uses activations to identify which head dimensions are redundant.
+
 ```bash
-# Install the core package and dependencies
+# Pruning a local checkpoint
+BASE_MODEL_DIR="./exp/gated-deltanet-340M/hf_checkpoint" \
+OUTPUT_DIR="./exp/pruned_rrqr" \
+PRUNING_RATIO=0.5 \
+bash scripts/run_pruning/run_rrqr.sh
+
+# Pruning from Hugging Face Hub
+BASE_MODEL_DIR="m-a-p/1.3B-100B-GatedDeltaNet-pure" \
+OUTPUT_DIR="./exp/pruned_wanda" \
+PRUNING_RATIO=0.25 \
+bash scripts/run_pruning/run_wanda.sh
+```
+
+### 3. LoRA Finetuning
+After pruning, performance can be recovered by finetuning the model using LoRA.
+
+```bash
+# Apply LoRA to the pruned checkpoint
+bash scripts/finetuning/run_lora.sh ./exp/pruned_rrqr ./exp/finetuned_rrqr
+```
+
+### 4. Evaluation with Multi-Evaluator
+To evaluate your models (initial, pruned, and finetuned) across multiple benchmarks in parallel:
+
+```bash
+# Evaluate a directory of checkpoints
+COMPRESSED_BASE="./exp/checkpoints" \
+bash scripts/eval/eval_batch_parallel.sh gated_delta_net 340m rrqr
+```
+
+### 5. Benchmarking Performance
+Verify the speedup and memory savings of your compressed models compared to the baseline.
+
+```bash
+# Benchmark throughput and latency
+INITIAL_MODEL="path/to/baseline" \
+COMPRESSED_MODEL="path/to/pruned" \
+bash scripts/benchmarking/benchmark_forward.sh
+```
+
+## 🛠️ Installation & Setup
+
+```bash
+# 1. Clone with submodules
+git clone --recursive https://github.com/phnazari/KeyReduction.git
+cd KeyReduction
+
+# 2. Setup environment
 pip install -e .
-
-# Install submodules in editable mode if needed
 pip install -e ./flash-linear-attention
 pip install -e ./flame
 ```
 
-## 📖 Usage
-
-### Running a Pruning Pipeline
-Each pruning method has a corresponding shell script in `scripts/run_pruning/`. These scripts handle the full pipeline: pruning -> conversion -> DCP save.
-
-#### Example: Strong RRQR Pruning
-```bash
-BASE_MODEL_DIR="path/to/model" OUTPUT_DIR="path/to/output" bash scripts/run_pruning/run_rrqr.sh
-```
-
-#### Other Pipelines
-- **Wanda**: `scripts/run_pruning/run_wanda.sh`
-- **Taylor (Grad)**: `scripts/run_pruning/run_grad.sh`
-- **PCA**: `scripts/run_pruning/run_pca.sh`
-- **L1**: `scripts/run_pruning/run_l1.sh`
-
-### Multi-Run Automation
-To sweep across different pruning ratios automatically:
-```bash
-bash scripts/multi_run/run_multi_rrqr.sh 128 path/to/model path/to/output_base
-```
-
-## 🪄 Finetuning
-
-After pruning, you can finetune the compressed model using LoRA to recover performance.
-
-### Running LoRA Finetuning
-```bash
-# Basic usage
-bash scripts/finetuning/run_lora.sh <COMPRESSED_CHECKPOINT> <OUTPUT_DIR>
-
-# For automated teacher determination (legacy mode)
-MODEL_NAME=delta_net PARAMS=340m RANK=64 METHOD=rrqr bash scripts/finetuning/run_lora.sh
-```
-
-## 📊 Evaluation & Benchmarking
-
-### Benchmarking Throughput
-```bash
-COMPRESSED_MODEL="path/to/pruned_model" bash scripts/benchmarking/benchmark_mixer.sh
-```
-
-### Parallel Evaluation
-```bash
-COMPRESSED_BASE="path/to/checkpoints_dir" bash scripts/eval/eval_batch_parallel.sh delta_net 340m l2
-```
+## 📁 Repository Structure
+- `src/key_reduction/`: Core pruning logic and algorithms.
+- `scripts/run_pruning/`: Individual pipelines for RRQR, Wanda, Grad, L1, etc.
+- `scripts/multi_run/`: Utilities for sweeping across multiple pruning ratios.
+- `scripts/eval/`: Parallel evaluation and table generation.
+- `scripts/benchmarking/`: Throughput and speedup verification.
+- `flame/`: Training framework and base model implementations.
