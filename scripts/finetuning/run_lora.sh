@@ -16,7 +16,7 @@ set -e  # Exit on error
 
 # Usage: bash scripts/finetuning/run_lora.sh <COMPRESSED_CHECKPOINT> <FINETUNED_OUTPUT_DIR> [TEACHER_MODEL]
 # Or use the legacy schema:
-# Usage: MODEL_NAME=delta_net PARAMS=340m RANK=64 METHOD=l2 bash scripts/finetuning/run_lora.sh
+# Usage: MODEL_NAME=delta_net PARAMS=340m RANK=64 METHOD=l1 bash scripts/finetuning/run_lora.sh
 
 if [ -n "$1" ] && [ -n "$2" ]; then
     COMPRESSED_CHECKPOINT="$1"
@@ -27,7 +27,7 @@ else
     MODEL_NAME=${MODEL_NAME:-"delta_net"}
     PARAMS=${PARAMS:-"340m"}
     RANK=${RANK:-64}
-    METHOD=${METHOD:-"l2"}
+    METHOD=${METHOD:-"l1"}
     BASE_DUMP_DIR=${BASE_DUMP_DIR:-"/fast/pnazari/flame/dump"}
     
     if [[ "$PARAMS" == "340m" ]]; then
@@ -37,7 +37,7 @@ else
     fi
     
     COMPRESSED_CHECKPOINT="${BASE_DUMP_DIR}/${MODEL_NAME}/${PARAMS}/${TOKENS}/checkpoints/${METHOD}_compressed_${RANK}/step-0"
-    FINETUNED_OUTPUT_DIR="${BASE_DUMP_DIR}/${MODEL_NAME}/${PARAMS}/${TOKENS}/checkpoints/${METHOD}_finetuned_${RANK}"
+    FINETUNED_OUTPUT_DIR="${BASE_DUMP_DIR}/${MODEL_NAME}/${PARAMS}/${TOKENS}/checkpoints/${METHOD}_finetuned_${RANK}_test"
 fi
 
 # Automatic Teacher determination (if not explicitly provided)

@@ -1,3 +1,15 @@
 .venv
 
+# intermediate files
+build
+dist
+*.egg-info
+dist-packages/*
+
 **__pycache__**
+
+# vscode
+.vscode
+
+# macOS
+.DS_Store

@@ -8,7 +8,7 @@ from typing import Optional
 import transformers
 from transformers import HfArgumentParser, TrainingArguments
 
-from flame.logging import get_logger
+from flame.flame.logging import get_logger
 
 logger = get_logger(__name__)
 

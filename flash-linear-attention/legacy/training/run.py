@@ -5,9 +5,9 @@ from transformers import (AutoConfig, AutoModelForCausalLM, AutoTokenizer,
                           Trainer)
 
 import fla  # noqa
-from flame.data import DataCollatorForLanguageModeling
-from flame.logging import LogCallback, get_logger
-from flame.parser import get_train_args
+from flame.flame.data import DataCollatorForLanguageModeling
+from flame.flame.logging import LogCallback, get_logger
+from flame.flame.parser import get_train_args
 
 logger = get_logger(__name__)
 

@@ -33,16 +33,16 @@ from tqdm import tqdm
 from einops import rearrange
 
 import fla # noqa
-import custom_models.delta_net_2 # noqa
-from flame.data import build_dataloader, build_dataset
+import flame.custom_models.delta_net_2 # noqa
+from flame.flame.data import build_dataloader, build_dataset
 
 # Import flash-linear-attention modules
 import fla # noqa
 from fla.modules import ShortConvolution
-import custom_models.delta_net_2 # noqa
+import flame.custom_models.delta_net_2 # noqa
 
 # Import flame utilities
-from flame.data import build_dataloader, build_dataset
+from flame.flame.data import build_dataloader, build_dataset
 
 def get_deltanet(model_path):
     print(f"Loading model from {model_path}...")
@@ -305,7 +305,7 @@ def prune_model(model, importance_scores, pruning_ratio, pruning_strategy, norm_
                 
                 # Dynamically import IndependentNorm based on model type
                 if model.config.model_type == 'delta_net_2':
-                    from custom_models.delta_net_2.delta_net_2 import IndependentNorm
+                    from flame.custom_models.delta_net_2.delta_net_2 import IndependentNorm
                 else:
                     from fla.layers.delta_net import IndependentNorm
                 

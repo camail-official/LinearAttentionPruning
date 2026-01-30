@@ -12,7 +12,7 @@ set -e
 # Configuration
 MODEL_NAME=${1:-"delta_net"}
 PARAMS=${2:-"340m"}
-METHOD=${3:-"l2"}
+METHOD=${3:-"l1"}
 
 if [[ "$PARAMS" == "340m" ]]; then
     TOKENS="10BT"

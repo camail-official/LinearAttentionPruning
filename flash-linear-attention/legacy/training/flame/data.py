@@ -9,7 +9,7 @@ from typing import Any, Dict, Iterable, List, Union
 import numpy as np
 import torch
 from datasets import Dataset, IterableDataset
-from flame.logging import get_logger
+from flame.flame.logging import get_logger
 from transformers import PreTrainedTokenizer
 
 logger = get_logger(__name__)

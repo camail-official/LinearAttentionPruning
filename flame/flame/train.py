@@ -23,7 +23,7 @@ except ImportError:
 
 import fla  # noqa
 import fla.models  # noqa - ensures all model configs are registered with AutoConfig
-import custom_models.delta_net_2
+import flame.custom_models.delta_net_2
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -45,13 +45,13 @@ from torchtitan.tools.logging import init_logger, logger
 from torchtitan.tools.profiling import maybe_enable_memory_snapshot, maybe_enable_profiling
 from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 
-import custom_models
-from flame.components.checkpoint import TrainState
-from flame.config_manager import JobConfig
-from flame.data import build_dataloader, build_dataset
-from flame.models.parallelize_fla import parallelize_fla
-from flame.models.pipeline_fla import pipeline_fla
-from flame.tools.utils import get_nparams_and_flops
+import flame.custom_models
+from flame.flame.components.checkpoint import TrainState
+from flame.flame.config_manager import JobConfig
+from flame.flame.data import build_dataloader, build_dataset
+from flame.flame.models.parallelize_fla import parallelize_fla
+from flame.flame.models.pipeline_fla import pipeline_fla
+from flame.flame.tools.utils import get_nparams_and_flops
 
 def build_tokenizer(job_config: JobConfig) -> AutoTokenizer:
     return AutoTokenizer.from_pretrained(job_config.model.tokenizer_path)
@@ -517,7 +517,7 @@ def main(job_config: JobConfig):
 
     # Apply torch.compile after checkpoint loading if it was deferred
     #if defer_compile:
-    #    from flame.models.parallelize_fla import apply_compile
+    #    from flame.flame.models.parallelize_fla import apply_compile
     #    logger.info("Applying torch.compile after checkpoint loading")
     #    for m in model_parts:
     #        apply_compile(m)

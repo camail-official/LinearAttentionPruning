@@ -9,6 +9,8 @@ dependencies = [
     "einops==0.7.0",
     "flame",
     "flash-linear-attention",
+    "peft==0.18.0",
+    "ray==2.53.0",
     "scipy==1.15.3",
     "tensorboard==2.20.0",
     "tokenizers==0.22.0",
