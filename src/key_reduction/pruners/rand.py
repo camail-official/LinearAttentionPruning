@@ -76,69 +76,23 @@ def prune_model_random(model, pruning_ratio, pruning_strategy):
         attn = layer.attn
         num_heads = attn.num_heads
         head_k_dim = attn.head_k_dim
-        head_v_dim = getattr(attn, "head_v_dim", attn.value_dim // num_heads)
         
         qk_indices = []
-        v_indices = []
 
-        if pruning_strategy == "dimension":
-            new_head_k_dim = math.floor(head_k_dim * (1 - pruning_ratio))
-            if new_head_k_dim < 1: new_head_k_dim = 1
-            
-            # Select random indices for Q/K
-            qk_indices = get_random_indices_per_head(
-                attn.q_proj.weight.shape[0],
-                new_head_k_dim,
-                num_heads,
-                device
-            )
-            
-            new_head_v_dim = head_v_dim
-            new_key_dim = num_heads * new_head_k_dim
-            new_value_dim = attn.value_dim
-            print(f"  Strategy: Dimension | New Head K Dim: {new_head_k_dim}")
-
-        elif pruning_strategy == "dimension_both":
-            # 1. Q/K Dimension
-            new_head_k_dim = int(head_k_dim * (1 - pruning_ratio))
-            if new_head_k_dim < 1: new_head_k_dim = 1
-            
-            qk_indices = get_random_indices_per_head(
-                attn.q_proj.weight.shape[0],
-                new_head_k_dim,
-                num_heads,
-                device
-            )
-            
-            # 2. V Dimension
-            new_head_v_dim = int(head_v_dim * (1 - pruning_ratio))
-            if new_head_v_dim < 1: new_head_v_dim = 1
-            
-            v_indices = get_random_indices_per_head(
-                attn.v_proj.weight.shape[0],
-                new_head_v_dim,
-                num_heads,
-                device
-            )
-            
-            # Handle normalization layers (Per-head slicing)
-            if hasattr(attn, "o_norm"):
-                if hasattr(attn.o_norm, "norms"): # IndependentNorm
-                    for h_idx, norm in enumerate(attn.o_norm.norms):
-                        head_v_indices = v_indices[h_idx * new_head_v_dim : (h_idx + 1) * new_head_v_dim]
-                        local_head_v_indices = head_v_indices % head_v_dim
-                        norm.weight.data = norm.weight.data[local_head_v_indices]
-                        if hasattr(norm, "bias") and norm.bias is not None:
-                            norm.bias.data = norm.bias.data[local_head_v_indices]
-                else: # Standard Shared Norm
-                    local_indices = v_indices[:new_head_v_dim] % head_v_dim
-                    attn.o_norm.weight.data = attn.o_norm.weight.data[local_indices]
-                    if hasattr(attn.o_norm, "bias") and attn.o_norm.bias is not None:
-                        attn.o_norm.bias.data = attn.o_norm.bias.data[local_indices]
-            
-            new_key_dim = num_heads * new_head_k_dim
-            new_value_dim = num_heads * new_head_v_dim
-            print(f"  Strategy: Dimension Both | New K: {new_head_k_dim} | New V: {new_head_v_dim}")
+        # STRATEGY: Reduce Q/K
+        new_head_k_dim = math.floor(head_k_dim * (1 - pruning_ratio))
+        if new_head_k_dim < 1: new_head_k_dim = 1
+        
+        # Select random indices for Q/K
+        qk_indices = get_random_indices_per_head(
+            attn.q_proj.weight.shape[0],
+            new_head_k_dim,
+            num_heads,
+            device
+        )
+        
+        new_key_dim = num_heads * new_head_k_dim
+        print(f"  Strategy: Dimension | New Head K Dim: {new_head_k_dim}")
 
         # --- EXECUTE SLICING ---
         if len(qk_indices) > 0:
@@ -149,32 +103,21 @@ def prune_model_random(model, pruning_ratio, pruning_strategy):
             if hasattr(attn, "k_conv1d"): 
                 attn.k_conv1d = slice_conv_layer(attn.k_conv1d, qk_indices)
 
-        if len(v_indices) > 0:
-            attn.v_proj = slice_linear_layer(attn.v_proj, v_indices, dim=0)
-            if hasattr(attn, "v_conv1d"): 
-                attn.v_conv1d = slice_conv_layer(attn.v_conv1d, v_indices)
-            if hasattr(attn, "g_proj") and attn.g_proj is not None:
-                attn.g_proj = slice_linear_layer(attn.g_proj, v_indices, dim=0)
-            attn.o_proj = slice_linear_layer(attn.o_proj, v_indices, dim=1)
-
         # Update Config
         attn.head_k_dim = new_head_k_dim
-        if hasattr(attn, "head_v_dim"): attn.head_v_dim = new_head_v_dim
         attn.key_dim = new_key_dim
-        attn.value_dim = new_value_dim
         if hasattr(attn, "conv_key_dim"): attn.conv_key_dim = new_key_dim
 
     # Global Config Update
     first_attn = layers[0].attn
     if model.config.model_type == 'gated_deltanet':
         model.config.head_dim = first_attn.head_k_dim
-        num_v_heads = getattr(first_attn, "num_v_heads", first_attn.num_heads)
-        model.config.expand_v = float(first_attn.value_dim / (num_v_heads * model.config.head_dim))
     else:
         model.config.expand_k = float(first_attn.key_dim / model.config.hidden_size)
-        model.config.expand_v = float(first_attn.value_dim / model.config.hidden_size)
         if hasattr(model.config, "head_dim"):
             model.config.head_dim = first_attn.head_k_dim
+
+    return model
 
     return model
 
@@ -226,7 +169,7 @@ def main():
     parser.add_argument("--output_dir", type=str, required=True)
     parser.add_argument("--pruning_ratio", type=float, default=0.5)
     parser.add_argument("--pruning_strategy", type=str, default="dimension", 
-                        choices=["dimension", "dimension_both"])
+                        choices=["dimension"])
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
     

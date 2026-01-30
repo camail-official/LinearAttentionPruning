@@ -11,9 +11,8 @@ set -e  # Exit on error
 
 # Pruning Settings
 PRUNING_RATIO=${PRUNING_RATIO:-0.5}
-PRUNING_STRATEGY=${PRUNING_STRATEGY:-"dimension"} # "dimension" (Shrink Head Dim) or "head" (Drop Heads)
+PRUNING_STRATEGY=${PRUNING_STRATEGY:-"dimension"} # "dimension" (Shrink Head Dim)
 IMPORTANCE_TYPE=${IMPORTANCE_TYPE:-"taylor"}     # "taylor" (Grad*W), "magnitude" (L2), "random"
-NORM_PRUNING_STRATEGY=${NORM_PRUNING_STRATEGY:-"permute"}  # shared, independent, union, permute
 
 # Configuration
 BASE_MODEL_DIR=${BASE_MODEL_DIR:-$1}
@@ -43,7 +42,6 @@ python "$REPO_ROOT/src/key_reduction/pruners/grad.py" \
     --output_dir "$OUTPUT_DIR" \
     --pruning_ratio "$PRUNING_RATIO" \
     --pruning_strategy "$PRUNING_STRATEGY" \
-    --norm_pruning_strategy "$NORM_PRUNING_STRATEGY" \
     --importance_type "$IMPORTANCE_TYPE" \
     --num_examples 128 \
     --batch_size 1 \

@@ -11,7 +11,7 @@ set -e  # Exit on error
 
 # Pruning Settings
 PRUNING_RATIO=${PRUNING_RATIO:-0.5}
-PRUNING_STRATEGY=${PRUNING_STRATEGY:-"dimension"}
+PRUNING_STRATEGY=${PRUNING_STRATEGY:-"dimension"} # Options: 'dimension'
 
 # Configuration
 BASE_MODEL_DIR=${BASE_MODEL_DIR:-$1}

@@ -242,21 +242,15 @@ def prune_model_strong_rrqr(model, dataloader, pruning_ratio, pruning_strategy, 
     for i, layer in enumerate(layers):
         if hasattr(layer, "attn"):
             attn = layer.attn
-            if pruning_strategy in ["dimension", "dimension_both"]:
-                # Prefer hooking the output of the convolution (input to the delta rule)
-                # if it exists, otherwise hook the projection.
-                # Q
-                if hasattr(attn, "q_conv1d"): hook_targets.append((i, "q_conv1d"))
-                else: hook_targets.append((i, "q_proj"))
-                
-                # K
-                if hasattr(attn, "k_conv1d"): hook_targets.append((i, "k_conv1d"))
-                else: hook_targets.append((i, "k_proj"))
-
-            if pruning_strategy == "dimension_both":
-                # V
-                if hasattr(attn, "v_conv1d"): hook_targets.append((i, "v_conv1d"))
-                else: hook_targets.append((i, "v_proj"))
+            # Prefer hooking the output of the convolution (input to the delta rule)
+            # if it exists, otherwise hook the projection.
+            # Q
+            if hasattr(attn, "q_conv1d"): hook_targets.append((i, "q_conv1d"))
+            else: hook_targets.append((i, "q_proj"))
+            
+            # K
+            if hasattr(attn, "k_conv1d"): hook_targets.append((i, "k_conv1d"))
+            else: hook_targets.append((i, "k_proj"))
 
     capturer = ActivationCapturer(model, hook_targets)
     
@@ -284,12 +278,9 @@ def prune_model_strong_rrqr(model, dataloader, pruning_ratio, pruning_strategy, 
         print(f"Layer {i}:")
 
         if pruning_strategy == "dimension":
-            # STRATEGY 1: Reduce Q/K
+            # STRATEGY: Reduce Q/K
             new_head_k_dim = math.floor(head_k_dim * (1 - pruning_ratio))
             if new_head_k_dim < 1: new_head_k_dim = 1
-            
-            # FIX: Initialize new_head_v_dim to unchanged value
-            new_head_v_dim = head_v_dim 
             
             # Determine which keys to look up based on what we hooked
             q_key = "q_conv1d" if hasattr(attn, "q_conv1d") else "q_proj"
@@ -302,60 +293,10 @@ def prune_model_strong_rrqr(model, dataloader, pruning_ratio, pruning_strategy, 
                 qk_indices = get_rrqr_indices_per_head_activations(
                     [q_act, k_act], new_head_k_dim, num_heads, permute_columns=permute_columns
                 )
-            print(f"  QK: {head_k_dim} -> {new_head_k_dim} (V unchanged)")
-
-        elif pruning_strategy == "dimension_both":
-            # STRATEGY 2: Reduce Q/K and V
-            new_head_k_dim = int(head_k_dim * (1 - pruning_ratio))
-            if new_head_k_dim < 1: new_head_k_dim = 1
-            
-            # Determine keys
-            q_key = "q_conv1d" if hasattr(attn, "q_conv1d") else "q_proj"
-            k_key = "k_conv1d" if hasattr(attn, "k_conv1d") else "k_proj"
-            
-            q_act = capturer.get_concatenated_activations(i, q_key)
-            k_act = capturer.get_concatenated_activations(i, k_key)
-            if q_act is not None:
-                qk_indices = get_rrqr_indices_per_head_activations(
-                    [q_act, k_act], new_head_k_dim, num_heads, permute_columns=permute_columns
-                )
-
-            new_head_v_dim = int(head_v_dim * (1 - pruning_ratio))
-            if new_head_v_dim < 1: new_head_v_dim = 1
-            
-            v_key = "v_conv1d" if hasattr(attn, "v_conv1d") else "v_proj"
-            v_act = capturer.get_concatenated_activations(i, v_key)
-            if v_act is not None:
-                v_indices = get_rrqr_indices_per_head_activations(
-                    v_act, new_head_v_dim, num_heads, permute_columns=permute_columns
-                )
-                
-                if hasattr(attn, "o_norm"):
-                    v_idx_t = torch.tensor(v_indices, device=device).long()
-                    # Handle IndependentNorm vs Shared Norm
-                    if hasattr(attn.o_norm, "norms"): # IndependentNorm
-                        for h_idx, norm in enumerate(attn.o_norm.norms):
-                            # extract the indices for this head
-                            head_v_indices = v_indices[h_idx * new_head_v_dim : (h_idx + 1) * new_head_v_dim]
-                            # these are global indices, convert to local head-space
-                            local_head_v_indices = torch.tensor(head_v_indices % head_v_dim, device=device).long()
-                            norm.weight.data = norm.weight.data[local_head_v_indices]
-                            if hasattr(norm, "bias") and norm.bias is not None:
-                                norm.bias.data = norm.bias.data[local_head_v_indices]
-                    else: # Standard Shared Norm
-                        # Use local indices for slicing the shared norm parameters.
-                        # We use the first head's indices as a heuristic.
-                        local_indices = torch.tensor(v_indices[:new_head_v_dim] % head_v_dim, device=device).long()
-                        attn.o_norm.weight.data = attn.o_norm.weight.data[local_indices]
-                        if hasattr(attn.o_norm, "bias") and attn.o_norm.bias is not None:
-                            attn.o_norm.bias.data = attn.o_norm.bias.data[local_indices]
-
-            print(f"  QK: {head_k_dim} -> {new_head_k_dim} | V: {head_v_dim} -> {new_head_v_dim}")
+            print(f"  QK: {head_k_dim} -> {new_head_k_dim}")
         
         else:
-            # Safety fallback
             new_head_k_dim = head_k_dim
-            new_head_v_dim = head_v_dim
 
         # --- SLICING ---
         if len(qk_indices) > 0:
@@ -378,12 +319,7 @@ def prune_model_strong_rrqr(model, dataloader, pruning_ratio, pruning_strategy, 
 
         # Update Config
         attn.head_k_dim = new_head_k_dim
-        if hasattr(attn, "head_v_dim"): attn.head_v_dim = new_head_v_dim
         attn.key_dim = num_heads * new_head_k_dim
-        
-        # Safe fallback for value_dim
-        current_head_v = new_head_v_dim
-        attn.value_dim = num_heads * current_head_v
 
     capturer.remove_hooks()
     capturer.clear()
@@ -392,11 +328,8 @@ def prune_model_strong_rrqr(model, dataloader, pruning_ratio, pruning_strategy, 
     first_attn = layers[0].attn
     if model.config.model_type == 'gated_deltanet':
         model.config.head_dim = first_attn.head_k_dim
-        num_v_heads = getattr(first_attn, "num_v_heads", first_attn.num_heads)
-        model.config.expand_v = float(first_attn.value_dim / (num_v_heads * model.config.head_dim))
     else:
         model.config.expand_k = float(first_attn.key_dim / model.config.hidden_size)
-        model.config.expand_v = float(first_attn.value_dim / model.config.hidden_size)
         if hasattr(model.config, "head_dim"):
             model.config.head_dim = first_attn.head_k_dim
 
@@ -457,7 +390,7 @@ def main():
     parser.add_argument("--output_dir", type=str, required=True)
     parser.add_argument("--pruning_ratio", type=float, default=0.5)
     parser.add_argument("--pruning_strategy", type=str, default="dimension", 
-                        choices=["dimension", "dimension_both"])
+                        choices=["dimension"])
     parser.add_argument("--permute_columns", action="store_true", help="Shuffle columns before RRQR to randomize tie-breaking")
     parser.add_argument("--dataset", type=str, default="HuggingFaceFW/fineweb-edu")
     parser.add_argument("--dataset_name", type=str, default="sample-10BT")
