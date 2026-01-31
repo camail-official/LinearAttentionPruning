@@ -125,7 +125,7 @@ torchrun --nnodes=${NNODE} \
 echo "TRAINING DONE!"
 echo "Converting the DCP checkpoints to HF format..."
 
-python -m flame.utils.convert_dcp_to_hf \
+python $REPO_ROOT/flame/flame/utils/convert_dcp_to_hf.py \
   --path $path/checkpoints \
   --step $steps \
   --config $config \

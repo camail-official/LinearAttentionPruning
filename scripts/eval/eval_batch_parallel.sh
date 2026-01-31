@@ -29,7 +29,7 @@ COMPRESSED_BASE=$(cd "$COMPRESSED_BASE" && pwd)
 
 # Default output directory inside the checkpoint base
 OUTPUT_BASE_DIR=${2:-"${COMPRESSED_BASE}/eval_results"}
-METHOD=${METHOD:-"all"}
+METHOD=${METHOD:-"rrqr"}
 MODEL_NAME=${MODEL_NAME:-"none"}
 
 TOKENIZER_PATH="fla-hub/transformer-1.3B-100B"

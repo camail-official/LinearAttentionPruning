@@ -18,38 +18,9 @@ set -e  # Exit on error
 # Or use the legacy schema:
 # Usage: MODEL_NAME=delta_net PARAMS=340m RANK=64 METHOD=l1 bash scripts/finetuning/run_lora.sh
 
-if [ -n "$1" ] && [ -n "$2" ]; then
-    COMPRESSED_CHECKPOINT="$1"
-    FINETUNED_OUTPUT_DIR="$2"
-    TEACHER_DIR="$3"
-else
-    # Fallback to user's logic if no explicit paths provided
-    MODEL_NAME=${MODEL_NAME:-"delta_net"}
-    PARAMS=${PARAMS:-"340m"}
-    RANK=${RANK:-64}
-    METHOD=${METHOD:-"l1"}
-    BASE_DUMP_DIR=${BASE_DUMP_DIR:-"/fast/pnazari/flame/dump"}
-    
-    if [[ "$PARAMS" == "340m" ]]; then
-        TOKENS="10BT"
-    else
-        TOKENS="100BT"
-    fi
-    
-    COMPRESSED_CHECKPOINT="${BASE_DUMP_DIR}/${MODEL_NAME}/${PARAMS}/${TOKENS}/checkpoints/${METHOD}_compressed_${RANK}/step-0"
-    FINETUNED_OUTPUT_DIR="${BASE_DUMP_DIR}/${MODEL_NAME}/${PARAMS}/${TOKENS}/checkpoints/${METHOD}_finetuned_${RANK}_test"
-fi
-
-# Automatic Teacher determination (if not explicitly provided)
-if [ -z "$TEACHER_DIR" ]; then
-    if [[ "$PARAMS" == "340m" ]]; then
-        TEACHER_DIR="${COMPRESSED_CHECKPOINT}/../../"
-    elif [[ "$MODEL_NAME" == "gated_delta_net" ]]; then
-        TEACHER_DIR="m-a-p/${PARAMS}-100B-GatedDeltaNet-pure"
-    else
-        TEACHER_DIR="fla-hub/${MODEL_NAME}-${PARAMS}-100B"
-    fi
-fi
+COMPRESSED_CHECKPOINT="$1"
+FINETUNED_OUTPUT_DIR="$2"
+TEACHER_DIR="$3"
 
 # LoRA configuration
 LORA_TARGET_MODULES=${LORA_TARGET_MODULES:-"q_proj,k_proj,v_proj"}
@@ -105,13 +76,13 @@ NNODE=$NNODE NGPU=$NGPU LOG_RANK=$LOG_RANK bash "$REPO_ROOT/flame/train.sh" \
   --optimizer.name AdamW \
   --optimizer.eps 1e-15 \
   --optimizer.lr 1e-4 \
-  --lr_scheduler.warmup_steps 100 \
+  --lr_scheduler.warmup_steps 1 \
   --lr_scheduler.lr_min 0.1 \
   --lr_scheduler.decay_type cosine \
   --training.batch_size 16 \
   --training.seq_len 2048 \
   --training.context_len 2048 \
-  --training.gradient_accumulation_steps 1 \
+  --training.gradient_accumulation_steps 100 \
   --training.max_norm 1.0 \
   --training.skip_nan_inf \
   --training.dataset HuggingFaceFW/fineweb-edu \
