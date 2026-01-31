@@ -1,16 +1,17 @@
 #!/bin/bash
 
 # Resolve repository root
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-FLAME_ROOT="$( cd "$SCRIPT_DIR/../.." && pwd )"
+#SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+#FLAME_ROOT="$( cd "$SCRIPT_DIR/../.." && pwd )"
 
 # Run training from the flame root
-cd "$FLAME_ROOT"
+# cd "$FLAME_ROOT"
 
-NNODE=1 NGPU=8 LOG_RANK=0 bash train.sh \
-  --job.config_file flame/models/fla.toml \
+# switch to NGPU=8 for reproducing our runs
+NNODE=1 NGPU=1 LOG_RANK=0 bash flame/train.sh \
+  --job.config_file flame/flame/models/fla.toml \
   --job.dump_folder outputs/delta_net_2/340m/10BT \
-  --model.config configs/delta_net_2_340M.json \
+  --model.config flame/configs/delta_net_2_340M.json \
   --model.tokenizer_path fla-hub/transformer-1.3B-100B \
   --optimizer.name AdamW \
   --optimizer.eps 1e-15 \

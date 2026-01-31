@@ -28,14 +28,11 @@ bash flame/flame/scripts/deltanet_340m.sh
 ### 2. Pruning a Model
 We provide several structural pruning methods. You can prune either a local checkpoint or a model directly from the Hugging Face Hub. Here, we show how to prune a pre-trained DeltaNet 1.3B model from [fla-hub](https://huggingface.co/fla-hub).
 
-#### Example: Deep RRQR (drrqr)
-This method uses activations to identify which head dimensions are redundant.
+#### Example: Deep RRQR (DRRQR)
+The following is an example for how to reduce the models key dimesnion by 50% using DRRQR:
 
 ```bash
-BASE_MODEL_DIR="fla-hub/delta_net-1.3B-100B" \
-OUTPUT_DIR="./exp/pruned_rrqr" \
-PRUNING_RATIO=0.5 \
-bash scripts/run_pruning/run_rrqr.sh
+bash scripts/run_pruning/run_rrqr.sh fla-hub/delta_net-1.3B-100B ./exp/pruned_rrqr 0.5
 ```
 
 ### 3. LoRA Finetuning

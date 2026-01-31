@@ -9,22 +9,23 @@ REPO_ROOT="$( cd "$SCRIPT_DIR/../.." && pwd )"
 
 set -e  # Exit on error
 
+# Configuration
+BASE_MODEL_DIR=${1:-$BASE_MODEL_DIR}
+OUTPUT_DIR=${2:-$OUTPUT_DIR}
+TARGET_RANK=${3:-$TARGET_RANK}
+
+if [ -z "$BASE_MODEL_DIR" ] || [ -z "$OUTPUT_DIR" ] || [ -z "$TARGET_RANK" ]; then
+    echo "Usage: bash $0 <BASE_MODEL_DIR> <OUTPUT_DIR> <TARGET_RANK>"
+    echo "Or: BASE_MODEL_DIR=/path/to/model OUTPUT_DIR=/path/to/output TARGET_RANK=64 bash $0"
+    exit 1
+fi
+
 # Pruning Settings
-TARGET_RANK=${TARGET_RANK:-64}
 N_CALIBRATION_SAMPLES=${N_CALIBRATION_SAMPLES:-1024}
 BATCH_SIZE=${BATCH_SIZE:-4}
 SEQ_LEN=${SEQ_LEN:-2048}
 VARIANCE_THRESHOLD=${VARIANCE_THRESHOLD:-0.95}
 
-# Configuration
-BASE_MODEL_DIR=${BASE_MODEL_DIR:-$1}
-OUTPUT_DIR=${OUTPUT_DIR:-$2}
-
-if [ -z "$BASE_MODEL_DIR" ] || [ -z "$OUTPUT_DIR" ]; then
-    echo "Usage: bash $0 <BASE_MODEL_DIR> <OUTPUT_DIR>"
-    echo "Or: BASE_MODEL_DIR=/path/to/model OUTPUT_DIR=/path/to/output bash $0"
-    exit 1
-fi
 
 echo "=========================================="
 echo "DeltaNet PCA Pruning Pipeline"

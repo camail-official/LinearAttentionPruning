@@ -10,16 +10,16 @@ REPO_ROOT="$( cd "$SCRIPT_DIR/../.." && pwd )"
 set -e  # Exit on error
 
 # Pruning Settings
-PRUNING_RATIO=${PRUNING_RATIO:-0.5}
 PRUNING_STRATEGY=${PRUNING_STRATEGY:-"dimension"} # Options: 'dimension' (only Q/K reduction)
 
 # Configuration
-BASE_MODEL_DIR=${BASE_MODEL_DIR:-$1}
-OUTPUT_DIR=${OUTPUT_DIR:-$2}
+BASE_MODEL_DIR=${1:-$BASE_MODEL_DIR}
+OUTPUT_DIR=${2:-$OUTPUT_DIR}
+PRUNING_RATIO=${3:-$PRUNING_RATIO}
 
-if [ -z "$BASE_MODEL_DIR" ] || [ -z "$OUTPUT_DIR" ]; then
-    echo "Usage: bash $0 <BASE_MODEL_DIR> <OUTPUT_DIR>"
-    echo "Or: BASE_MODEL_DIR=/path/to/model OUTPUT_DIR=/path/to/output bash $0"
+if [ -z "$BASE_MODEL_DIR" ] || [ -z "$OUTPUT_DIR" ] || [ -z "$PRUNING_RATIO" ]; then
+    echo "Usage: bash $0 <BASE_MODEL_DIR> <OUTPUT_DIR> <PRUNING_RATIO>"
+    echo "Or: BASE_MODEL_DIR=/path/to/model OUTPUT_DIR=/path/to/output PRUNING_RATIO=0.5 bash $0"
     exit 1
 fi
 
