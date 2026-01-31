@@ -45,11 +45,11 @@ After pruning, performance can be recovered by finetuning the model using LoRA.
 bash scripts/finetuning/run_lora.sh ./exp/pruned_rrqr/step-0 ./exp/finetuned_rrqr
 ```
 
-### 4. Evaluation with Multi-Evaluator
-To evaluate your models (initial, pruned, and finetuned) across multiple benchmarks in parallel. This script automatically discovers all compressed and finetuned models in the provided directory.
+### 4. Evaluation
+We provide a script to evaluate the model across multiple benchmarks.
 
 ```bash
-bash scripts/eval/eval_batch_parallel.sh ./exp/finetuned_rrqr
+bash scripts/eval/eval_single_file.sh ./exp/finetuned_rrqr
 ```
 
 ### 5. Benchmarking Performance
