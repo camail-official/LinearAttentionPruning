@@ -10,8 +10,8 @@ set -e  # Exit on error
 
 # Configuration (matching compression pipeline defaults)
 # Use positional arguments with fallbacks to user's specified paths
-INITIAL_MODEL=${1:-"/fast/pnazari/flame/dump/gated_delta_net/340m/10BT/checkpoints"}
-COMPRESSED_MODEL=${2:-"/fast/pnazari/flame/dump/gated_delta_net/340m/10BT/checkpoints/compressed_16"}
+INITIAL_MODEL=${1:-""}
+COMPRESSED_MODEL=${2:-""}
 
 #INITIAL_MODEL="m-a-p/1.3B-100B-GatedDeltaNet-pure"
 #COMPRESSED_MODEL="/fast/pnazari/flame/dump/gated_delta_net/1.3B/100BT/checkpoints/compressed_4"

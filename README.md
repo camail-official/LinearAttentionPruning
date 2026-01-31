@@ -49,27 +49,22 @@ bash scripts/finetuning/run_lora.sh ./exp/pruned_rrqr/step-0 ./exp/finetuned_rrq
 We provide a script to evaluate the model across multiple benchmarks.
 
 ```bash
-bash scripts/eval/eval_single_file.sh ./exp/finetuned_rrqr
+bash scripts/eval/eval_single_file.sh ./exp/finetuned_rrqr/checkpoints
 ```
 
 ### 5. Benchmarking Performance
 Verify the speedup and memory savings of your compressed models compared to the baseline.
 
 ```bash
-INITIAL_MODEL="fla-hub/delta_net-1.3B-100B" \
-COMPRESSED_MODEL="exp/finetuned_rrqr" \
-bash scripts/benchmarking/benchmark_forward.sh
+bash scripts/benchmarking/benchmark_forward.sh fla-hub/delta_net-1.3B-100B exp/finetuned_rrqr/checkpoints
 ```
 
 ### 6. State Rank Analysis
 Analyze the rank utilization of recurrent states during forward passes to understand how well the model is utilizing its latent space.
 
 ```bash
-bash scripts/eval/run_effective_state_rank.sh /path/to/model ./outputs/rank_analysis
+bash scripts/eval/run_effective_state_rank.sh exp/finetuned_rrqr/checkpoints ./outputs/rank_analysis
 ```
-This script generates:
-- **Rank Lists**: Per-head rank utilization tensors saved in `.pt` format.
-- **Visualizations**: Combined plots showing rank evolution across layers.
 
 # Citation
 If you find this repository helpful, please cite our work:
