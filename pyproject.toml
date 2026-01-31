@@ -36,24 +36,3 @@ members = [
     "flash-linear-attention",
     "flame",
 ]
-
-[project.optional-dependencies]
-dev = [
-    "ruff>=0.12.11",
-]
-
-[tool.ruff]
-target-version = "py312"
-line-length = 99
-src = ["src"]
-
-[tool.ruff.lint]
-select = ["C", "E", "F", "I", "W", "D", "N"]
-ignore = ["E741", "W605", "C408", "E402", "F722", "N806", "N803", "D107"]
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
-
-[tool.ruff.format]
-quote-style = "double"
-docstring-code-format = true
