@@ -46,7 +46,7 @@ from torchtitan.tools.profiling import maybe_enable_memory_snapshot, maybe_enabl
 from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 
 import custom_models
-from flame.flame.components.checkpoint import TrainState
+from flame.components.checkpoint import TrainState
 from flame.flame.config_manager import JobConfig
 from flame.flame.data import build_dataloader, build_dataset
 from flame.flame.models.parallelize_fla import parallelize_fla

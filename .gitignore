@@ -13,3 +13,6 @@ dist-packages/*
 
 # macOS
 .DS_Store
+
+# output
+outputs
