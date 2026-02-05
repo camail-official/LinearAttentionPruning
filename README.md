@@ -1,6 +1,6 @@
-<!--<p align="center">
-  <img src="assets/logo.png" width="600" alt="KeyReduction">
-</p>-->
+<p align="center">
+  <img src="assets/logo.png" width="800" alt="KeyReduction">
+</p>
 
 <h1 align="center">KeyReduction</h1>
 
